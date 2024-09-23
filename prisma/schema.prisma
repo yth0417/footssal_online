@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  userId        Int         @id @default(autoincrement()) @map("userId")
+  nickName      String      @unique @map("nickName")
+  id            String      @unique @map("id")
+  password      String      @map("password")
+  win           Int         @default(0)     @map("win")
+  draw          Int         @default(0)     @map("draw")
+  lose          Int         @default(0)     @map("lose")
+  score         Int         @default(2000)  @map("score")
+  money         Int         @default(1000000) @map("money")
+  
+  createdAt     DateTime    @default(now()) @map("createdAt")
+  updatedAt     DateTime    @updatedAt @map("updatedAt")
+
+  team                   Teams[]  // 사용자(Users) 테이블과 팀(Teams) 테이블이 1:N 관계를 맺음.
+  playerWaitingList      PlayerWaitingLists?  // 사용자(Users) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:1 관계를 맺음.
+
+  @@map("Users")
+}
+
+model Teams {
+  teamId                Int         @id @default(autoincrement()) @map("teamId")
+  userId                Int         @map("userId")
+  name                  String      @unique @map("name")
+
+  createdAt             DateTime    @default(now()) @map("createdAt")
+  updatedAt             DateTime    @updatedAt @map("updatedAt")
+
+  user      Users       @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
+  playerWaitingList     PlayerWaitingLists[]  // 팀(Teams) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:N 관계를 맺음.
+  TeamInternals         TeamInternals[]  // 팀(Teams) 테이블과 팀 편성(TeamInternals) 테이블이 1:N 관계를 맺음.
+
+  @@map("Teams")
+}
+
+model TeamInternals {
+  teamInternalsId       Int         @id @default(autoincrement()) @map("teamInternalsId")
+  teamId                Int         @map("teamId")
+  playerId              Int         @map("playerId")
+
+  createdAt             DateTime    @default(now()) @map("createdAt")
+  updatedAt             DateTime    @updatedAt @map("updatedAt")
+
+  team     Teams        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+
+  @@map("TeamInternals")
+}
+
+model PlayerWaitingLists {
+  playerWaitingListsId       Int         @id @default(autoincrement()) @map("playerWaitingListsId")
+  userId                     Int         @unique @map("userId")
+  teamId                     Int         @map("teamId")
+  playerId                   Int         @map("playerId")
+  count                      Int         @map("count")
+
+  createdAt                  DateTime    @default(now()) @map("createdAt")
+  updatedAt                  DateTime    @updatedAt @map("updatedAt")
+
+  user     Users        @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
+  team     Teams        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+
+  @@map("PlayerWaitingLists")
+}
+
+model Players {
+  playerId              Int         @id @default(autoincrement()) @map("playerId")
+  name                  String      @map("name")
+  speed                 Int         @map("speed")
+  goalDecisiveness      Int         @map("goalDecisiveness")
+  shootPower            Int         @map("shootPower")
+  defense               Int         @map("defense")
+  stamina               Int         @map("stamina")
+  tier                  String      @map("tier")
+
+  createdAt             DateTime    @default(now()) @map("createdAt")
+  updatedAt             DateTime    @updatedAt @map("updatedAt")
+
+  @@map("Players")
+}
