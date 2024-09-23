@@ -1,6 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import PlayRouter from "./routes/plays.router.js";
+import PlaysRouter from "./routes/plays.router.js";
 import LogMiddleware from "./middlewares/log.middleware.js";
 import ErrorHandlingMiddleware from "./middlewares/error-handling.middleware.js";
 import dotenv from "dotenv";
@@ -12,7 +12,7 @@ const PORT = 3308;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use("/api", [PlayRouter, UsersRouter]);
+app.use("/api", [PlaysRouter]);
 app.use(LogMiddleware);
 app.use(ErrorHandlingMiddleware);
 

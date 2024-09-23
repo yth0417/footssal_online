@@ -7,7 +7,7 @@ const router = express.Router();
 /* 매칭 API */
 router.get("/match", authMiddleware, async (req, res, next) => {
   try {
-    const { userId } = req.users;
+    const { userId } = req.user;
 
     // 내 계정 찾기
     const myAccount = await prisma.users.findFirst({
@@ -19,7 +19,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     }
 
     // 내 팀 선수들 정보 가져오기
-    const myTeam = await prisma.teamInternal.findMany({
+    const myTeam = await prisma.teamInternals.findMany({
       where: { userId },
       select: { playerId: true },
     });
@@ -30,7 +30,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 매치메이킹 API
     // 매치 가능하고 3명을 배치한 유저들 정보 가져오기
-    const allTeams = await prisma.teamInternal.findMany({
+    const allTeams = await prisma.teamInternals.findMany({
       select: {
         userId: true,
         playerId: true,
@@ -93,7 +93,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     const enemysId = enemyIdArr[Math.floor(Math.random() * enemyIdArr.length)];
 
     // 상대 팀 선수들 정보 가져오기
-    const enemyTeam = await prisma.teamInternal.findMany({
+    const enemyTeam = await prisma.teamInternals.findMany({
       where: {
         userId: enemysId,
       },
