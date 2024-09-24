@@ -56,18 +56,23 @@ router.post("/teams", authMiddleware, async (req, res) => {
       data: {
         userId: userId.userId,
         name: name || null,
-        TeamInternal: {
-          create: playerIds.map((playerId) => ({ playerId })),
-        },
       },
     });
 
-    res
-      .status(201)
-      .json({
-        message: "팀이 성공적으로 생성되었습니다.",
-        teamId: newTeam.teamId,
+    for (const playerId of playerIds) {
+      await prisma.teamInternals.create({
+        data: {
+          teamId: newTeam.teamId,
+          playerId: playerId,
+          userId: userId.userId,
+        },
       });
+    }
+
+    res.status(201).json({
+      message: "팀이 성공적으로 생성되었습니다.",
+      teamId: newTeam.teamId,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "서버 오류" });
@@ -151,7 +156,7 @@ router.put("/teams/:teamId", authMiddleware, async (req, res) => {
     // 3. 교체할 새로운 선수가 대기 명단에 있는지 확인
     const playerInWaitingList = await prisma.playerWaitingLists.findFirst({
       where: {
-        userId: userId.userId,
+        userId: userId,
         playerId: newPlayerId,
       },
     });

@@ -12,7 +12,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 내 계정 찾기
     const myAccount = await prisma.users.findFirst({
-      where: { userId: userId.userId },
+      where: { userId: userId },
     });
 
     if (!myAccount) {
@@ -57,7 +57,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     const scoreArr = await prisma.users.findMany({
       where: {
         userId: {
-          in: matchUsersArr,
+          in: matchUsersArr.map((id) => Number(id)), // 문자열을 숫자로 변환
         },
       },
       select: {
@@ -74,8 +74,8 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     // 내 점수를 기준으로 위 아래 3명 가져오기
     for (let i = 0; i < scoreArr.length; i++) {
       if (scoreArr[i].userId === userId) {
-        // 내 점수를 기준으로 아래 3명 가져오기
-        for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
+        // 내 점수를 기준으로 같거나 아래 3명 가져오기
+        for (let j = i; j >= 0 && j >= i - 3; j--) {
           enemyIdArr.push(scoreArr[j].userId);
         }
         // 내 점수를 기준으로 위 3명 가져오기
@@ -96,7 +96,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     // 상대 팀 선수들 정보 가져오기
     const enemyTeam = await prisma.teamInternals.findMany({
       where: {
-        userId: enemysId.userId,
+        userId: enemysId,
       },
       select: {
         playerId: true,
@@ -162,13 +162,13 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 내 게임 점수
     const myScore = await prisma.users.findFirst({
-      where: { userId: userId.userId },
+      where: { userId: userId },
       select: { score: true },
     });
 
     // 상대방 게임 점수
     const enemyScore = await prisma.users.findFirst({
-      where: { userId: enemysId.userId },
+      where: { userId: enemysId },
       select: { score: true },
     });
 
@@ -199,12 +199,16 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 점수 업데이트
     await prisma.users.update({
-      where: { userId: userId.userId },
-      data: { score: newMyScore },
+      where: {
+        userId: userId
+      },
+      data: {
+        score: newMyScore
+      },
     });
 
     await prisma.users.update({
-      where: { userId: enemysId.userId },
+      where: { userId: enemysId },
       data: { score: newEnemyScore },
     });
 

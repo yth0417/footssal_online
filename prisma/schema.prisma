@@ -28,6 +28,7 @@ model Users {
   updatedAt     DateTime    @updatedAt @map("updatedAt")
 
   team                   Teams[]  // 사용자(Users) 테이블과 팀(Teams) 테이블이 1:N 관계를 맺음.
+  TeamInternal           TeamInternals[]
   playerWaitingList      PlayerWaitingLists[]  // 사용자(Users) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:N 관계를 맺음.
 
   @@map("Users")
@@ -51,14 +52,16 @@ model Teams {
 
 model TeamInternals {
   teamInternalsId       Int         @id @default(autoincrement()) @map("teamInternalsId")
+  userId                Int        @map("userId")
   teamId                Int         @map("teamId")
   playerId              Int         @map("playerId")
 
   createdAt             DateTime    @default(now()) @map("createdAt")
   updatedAt             DateTime    @updatedAt @map("updatedAt")
 
-  team     Teams        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
-  player   Players      @relation(fields: [playerId], references: [playerId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
+  user     Users        @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
+  team     Teams         @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+  player   Players       @relation(fields: [playerId], references: [playerId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
 
   @@unique([teamId, playerId])
   @@map("TeamInternals")
