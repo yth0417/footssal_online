@@ -209,6 +209,25 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       moneyRewardMyTeam = 5000; // 승리 시 얻는 돈
       moneyRewardEnemyTeam = 2000; // 패배 시 상대방이 얻는 돈
+
+      // 승리 카운트 업데이트
+      await prisma.users.update({
+        where: { userId: userId },
+        data: {
+          win: { increment: 1 },
+          score: newMyScore,
+          money: { increment: moneyRewardMyTeam },
+        },
+      });
+
+      await prisma.users.update({
+        where: { userId: enemyId.userId },
+        data: {
+          lose: { increment: 1 },
+          score: newEnemyScore,
+          money: { increment: moneyRewardEnemyTeam },
+        },
+      });
     } else if (randomValue > myTeamTotalPower) {
       // 상대 팀 승리
       const bScore = Math.floor(Math.random() * 4) + 2;
@@ -220,6 +239,25 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       moneyRewardMyTeam = 2000; // 패배 시 얻는 돈
       moneyRewardEnemyTeam = 5000; // 승리 시 적이 얻는 돈
+
+      // 패배 카운트 업데이트
+      await prisma.users.update({
+        where: { userId: userId },
+        data: {
+          lose: { increment: 1 },
+          score: newMyScore,
+          money: { increment: moneyRewardMyTeam },
+        },
+      });
+
+      await prisma.users.update({
+        where: { userId: enemyId.userId },
+        data: {
+          win: { increment: 1 },
+          score: newEnemyScore,
+          money: { increment: moneyRewardEnemyTeam },
+        },
+      });
     } else {
       // 무승부
       const drawScore = Math.floor(Math.random() * 4) + 2;
@@ -230,36 +268,51 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       moneyRewardMyTeam = 3000; // 무승부 시 얻는 돈
       moneyRewardEnemyTeam = 3000; // 무승부 시 상대방이 얻는 돈
+
+      await prisma.users.update({
+        where: { userId: userId },
+        data: {
+          draw: { increment: 1 },
+          score: newMyScore,
+          money: { increment: moneyRewardMyTeam },
+        },
+      });
+
+      await prisma.users.update({
+        where: { userId: enemyId.userId },
+        data: {
+          draw: { increment: 1 },
+          score: newEnemyScore,
+          money: { increment: moneyRewardEnemyTeam },
+        },
+      });
     }
 
-    // 점수 업데이트
-    await prisma.users.update({
-      where: {
-        userId: userId,
-      },
-      data: {
-        score: newMyScore,
-        money: { increment: moneyRewardMyTeam }, // 돈 업데이트
-      },
+    // 결과 반환
+    const myUpdatedUser = await prisma.users.findUnique({
+      where: { userId: userId },
+      select: { win: true, draw: true, lose: true, money: true },
     });
 
-    await prisma.users.update({
+    const enemyUpdatedUser = await prisma.users.findUnique({
       where: { userId: enemyId.userId },
-      data: {
-        score: newEnemyScore,
-        money: { increment: moneyRewardEnemyTeam }, // 적의 돈 업데이트 },
-      },
+      select: { win: true, draw: true, lose: true, money: true },
     });
 
     // 결과 반환
-    return res
-      .status(201)
-      .json({
-        result,
-        myScore: newMyScore,
-        enemyScore: newEnemyScore,
-        myMoney: moneyRewardMyTeam,
-        enemyMoney: moneyRewardEnemyTeam });
+    return res.status(201).json({
+      result,
+      myScore: newMyScore,
+      enemyScore: newEnemyScore,
+      myWins: myUpdatedUser.win,
+      myDraws: myUpdatedUser.draw,
+      myLosses: myUpdatedUser.lose,
+      myMoney: myUpdatedUser.money, // 내 팀의 현재 돈
+      enemyWins: enemyUpdatedUser.win,
+      enemyDraws: enemyUpdatedUser.draw,
+      enemyLosses: enemyUpdatedUser.lose,
+      enemyMoney: enemyUpdatedUser.money, // 적 팀의 현재 돈
+    });
   } catch (err) {
     next(err);
   }
