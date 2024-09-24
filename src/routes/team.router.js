@@ -238,4 +238,57 @@ router.delete("/teams/:teamId", authMiddleware, async (req, res) => {
   }
 });
 
+// 특정 팀 조회 API
+router.get("/teams/:teamId", authMiddleware, async (req, res) => {
+  const { teamId } = req.params;
+
+  try {
+    // teamId로 특정 팀을 찾음
+    const team = await prisma.teams.findUnique({
+      where: {
+        teamId: parseInt(teamId, 10),
+      },
+      select: {
+        userId: true,
+        teamId: true,
+        name: true,
+        TeamInternal: {
+          select: {
+            playerId: true,
+          },
+        },
+      },
+    });
+
+    // 팀이 존재하지 않으면 에러 응답
+    if (!team) {
+      return res.status(404).json({ error: "팀을 찾을 수 없습니다." });
+    }
+
+    // 해당 팀의 선수 정보를 가져옴
+    const players = await prisma.players.findMany({
+      where: {
+        playerId: {
+          in: team.TeamInternal.map((internal) => internal.playerId),
+        },
+      },
+      select: {
+        playerId: true,
+        name: true,
+      },
+    });
+
+    // 응답으로 팀 정보와 선수 정보를 함께 반환
+    res.json({
+      teamId: team.teamId,
+      userId: team.userId,
+      name: team.name,
+      players,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "서버 오류가 발생했습니다." });
+  }
+});
+
 export default router;
