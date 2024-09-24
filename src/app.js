@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import gatchaRouter from "./routes/gatcha.router.js";
 import playersRouter from "./routes/players.router.js";
 import PlaysRouter from "./routes/plays.router.js";
+import playsSelfRouter from "./routes/playsSelf.router.js";
 import teamRouter from "./routes/team.router.js";
 import usersRouter from "./routes/users.router.js";
 import reinforce from "./routes/reinforce.router.js"
@@ -17,7 +18,7 @@ const PORT = 3308;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use("/api", [PlaysRouter, gatchaRouter, playersRouter, teamRouter, usersRouter, reinforce]);
+app.use("/api", [PlaysRouter, gatchaRouter, playersRouter, teamRouter, usersRouter, reinforce, playsSelfRouter]);
 app.use(LogMiddleware);
 app.use(ErrorHandlingMiddleware);
 
