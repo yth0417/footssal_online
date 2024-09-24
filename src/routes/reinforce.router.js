@@ -148,7 +148,7 @@ router.patch("/reinforce/:playerId", authMiddleware, async (req, res, next) => {
       //[강화 실패] 만약 선수를 강화하다가 터진다면
       if (reinforceBreakRate < breakRate) {
         //초기(1강 상태)의 능력치를 가져오기위해 선수테이블에서 같은 선수의 정보를 불러옴
-        const fail_player = await prisma.Players.findFirst({
+        const fail_player = await prisma.players.findFirst({
           where: {
             playerId: +playerId,
           },

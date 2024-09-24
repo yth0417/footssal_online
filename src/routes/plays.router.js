@@ -46,19 +46,24 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 3명의 선수를 가진 유저만 필터링하여 배열로 저장
     const matchUsersArr = Object.keys(userTeamCount).filter(
-      (userId) => userTeamCount[userId] === 3
+      (Id) => userTeamCount[Id] === 3 && Id !== String(userId)
     );
 
-    if (matchUsersArr.length === 1) {
+    if (matchUsersArr.length === 0) {
       return res
         .status(400)
         .json({ message: "상대방이 없어서 매칭이 불가합니다." });
     }
+
+    // 내 팀 정보 가져오기
+    const myTeamPlayerIds = myTeam.map(({ playerId }) => playerId);
+
+    const matchAccountIdArr = matchUsersArr.map(({ playerId }) => playerId);
+
+    // 적 유저 정보 가져오기
     const scoreArr = await prisma.users.findMany({
       where: {
-        userId: {
-          in: matchUsersArr.map((id) => Number(id)), // 문자열을 숫자로 변환
-        },
+        userId: userId
       },
       select: {
         score: true,
@@ -93,20 +98,31 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     const enemysId = enemyIdArr[Math.floor(Math.random() * enemyIdArr.length)];
 
+    // 상대방 계정 찾기
+    const enemyId = await prisma.users.findFirst({
+      where: {
+        userid: enemysId.userId,
+      },
+    });
+
     // 상대 팀 선수들 정보 가져오기
     const enemyTeam = await prisma.teamInternals.findMany({
       where: {
-        userId: enemysId,
+        userId: enemyId.userId,
       },
       select: {
         playerId: true,
       },
     });
 
+    // 중복 선수 확인
+    const enemyTeamPlayerIds = enemyTeam.map(({ playerId }) => playerId);
+    const uniqueMyTeamPlayerIds = [...new Set(myTeamPlayerIds)]; // 내 팀의 고유 선수
+    const uniqueEnemyTeamPlayerIds = [...new Set(enemyTeamPlayerIds)]; // 적 팀의 고유 선수
+
     // 내 팀의 선수 정보 가져오기
-    const myTeamPlayerIds = myTeam.map(({ playerId }) => playerId);
     const myTeamPlayers = await prisma.players.findMany({
-      where: { playerId: { in: myTeamPlayerIds } },
+      where: { playerId: { in: uniqueMyTeamPlayerIds } },
       select: {
         speed: true,
         goalDecisiveness: true,
@@ -117,9 +133,8 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     });
 
     // 상대 팀의 선수 정보 가져오기
-    const enemyTeamPlayerIds = enemyTeam.map(({ playerId }) => playerId);
     const enemyPlayers = await prisma.players.findMany({
-      where: { playerId: { in: enemyTeamPlayerIds } },
+      where: { playerId: { in: uniqueEnemyTeamPlayerIds } },
       select: {
         speed: true,
         goalDecisiveness: true,
@@ -168,7 +183,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 상대방 게임 점수
     const enemyScore = await prisma.users.findFirst({
-      where: { userId: enemysId },
+      where: { userId: enemyId.userId },
       select: { score: true },
     });
 
@@ -208,7 +223,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     });
 
     await prisma.users.update({
-      where: { userId: enemysId },
+      where: { userId: enemyId.userId },
       data: { score: newEnemyScore },
     });
 

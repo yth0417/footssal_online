@@ -156,8 +156,8 @@ router.put("/teams/:teamId", authMiddleware, async (req, res) => {
     // 3. 교체할 새로운 선수가 대기 명단에 있는지 확인
     const playerInWaitingList = await prisma.playerWaitingLists.findFirst({
       where: {
-        userId: userId,
-        playerId: newPlayerId,
+        userId: userId.userId,
+        playerId: newPlayerId.playerId,
       },
     });
 
@@ -182,6 +182,7 @@ router.put("/teams/:teamId", authMiddleware, async (req, res) => {
     await prisma.teamInternals.create({
       data: {
         teamId: parseInt(teamId, 10),
+        userId: userId.userId,
         playerId: newPlayerId,
       },
     });
