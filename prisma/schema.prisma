@@ -70,10 +70,16 @@ model TeamInternals {
 model PlayerWaitingLists {
   playerWaitingListsId       Int         @id @default(autoincrement()) @map("playerWaitingListsId")
   userId                     Int         @map("userId")
-  teamId                     Int?         @map("teamId")
+  teamId                     Int?        @map("teamId")
   playerId                   Int         @map("playerId")
   name                       String?     @map("name")
+  speed                      Int         @map("speed")
+  goalDecisiveness           Int         @map("goalDecisiveness")
+  shootPower                 Int         @map("shootPower")
+  defense                    Int         @map("defense")
+  stamina                    Int         @map("stamina")
   count                      Int         @map("count")
+  force                      Int         @default(1) @map("force") //강화수치
 
   createdAt                  DateTime    @default(now()) @map("createdAt")
   updatedAt                  DateTime    @updatedAt @map("updatedAt")
