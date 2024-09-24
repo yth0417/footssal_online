@@ -123,6 +123,12 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
         data: {
           userId: userId.userId,
           playerId: pickPlayer.playerId,
+          name: pickPlayer.name,
+          speed : pickPlayer.speed,
+          goalDecisiveness : pickPlayer.goalDecisiveness,
+          shootPower : pickPlayer.shootPower,
+          defense : pickPlayer.defense,
+          stamina : pickPlayer.stamina,
           count: 1,
         },
       });
@@ -155,6 +161,7 @@ router.get('/list', authMiddleware, async (req, res, next) => {
               },
             },
             count: true,
+            force: true
           }
       })
     
