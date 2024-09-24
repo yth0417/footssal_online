@@ -73,7 +73,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
         score: "asc",
       },
     });
-    
+
     const enemyIdArr = [];
 
     // console.log("enemyIdArr:", enemyIdArr);
@@ -195,6 +195,9 @@ router.get("/match", authMiddleware, async (req, res, next) => {
       select: { score: true },
     });
 
+    let moneyRewardMyTeam = 0;
+    let moneyRewardEnemyTeam = 0;
+
     if (randomValue < myTeamTotalPower) {
       // 내 팀 승리
       const aScore = Math.floor(Math.random() * 4) + 2;
@@ -203,6 +206,9 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       newMyScore = myScore.score + 10;
       newEnemyScore = Math.max(enemyScore.score - 5, 0);
+
+      moneyRewardMyTeam = 5000; // 승리 시 얻는 돈
+      moneyRewardEnemyTeam = 2000; // 패배 시 상대방이 얻는 돈
     } else if (randomValue > myTeamTotalPower) {
       // 상대 팀 승리
       const bScore = Math.floor(Math.random() * 4) + 2;
@@ -211,6 +217,9 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       newMyScore = Math.max(myScore.score - 5, 0);
       newEnemyScore = enemyScore.score + 10;
+
+      moneyRewardMyTeam = 2000; // 패배 시 얻는 돈
+      moneyRewardEnemyTeam = 5000; // 승리 시 적이 얻는 돈
     } else {
       // 무승부
       const drawScore = Math.floor(Math.random() * 4) + 2;
@@ -218,27 +227,39 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
       newMyScore = myScore.score + 3;
       newEnemyScore = enemyScore.score + 3;
+
+      moneyRewardMyTeam = 3000; // 무승부 시 얻는 돈
+      moneyRewardEnemyTeam = 3000; // 무승부 시 상대방이 얻는 돈
     }
 
     // 점수 업데이트
     await prisma.users.update({
       where: {
-        userId: userId
+        userId: userId,
       },
       data: {
-        score: newMyScore
+        score: newMyScore,
+        money: { increment: moneyRewardMyTeam }, // 돈 업데이트
       },
     });
 
     await prisma.users.update({
       where: { userId: enemyId.userId },
-      data: { score: newEnemyScore },
+      data: {
+        score: newEnemyScore,
+        money: { increment: moneyRewardEnemyTeam }, // 적의 돈 업데이트 },
+      },
     });
 
     // 결과 반환
     return res
       .status(201)
-      .json({ result, myScore: newMyScore, enemyScore: newEnemyScore });
+      .json({
+        result,
+        myScore: newMyScore,
+        enemyScore: newEnemyScore,
+        myMoney: moneyRewardMyTeam,
+        enemyMoney: moneyRewardEnemyTeam });
   } catch (err) {
     next(err);
   }
