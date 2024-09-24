@@ -28,7 +28,7 @@ model Users {
   updatedAt     DateTime    @updatedAt @map("updatedAt")
 
   team                   Teams[]  // 사용자(Users) 테이블과 팀(Teams) 테이블이 1:N 관계를 맺음.
-  playerWaitingList      PlayerWaitingLists?  // 사용자(Users) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:1 관계를 맺음.
+  playerWaitingList      PlayerWaitingLists[]  // 사용자(Users) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:N 관계를 맺음.
 
   @@map("Users")
 }
@@ -41,9 +41,10 @@ model Teams {
   createdAt             DateTime    @default(now()) @map("createdAt")
   updatedAt             DateTime    @updatedAt @map("updatedAt")
 
-  user      Users       @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
-  playerWaitingList     PlayerWaitingLists[]  // 팀(Teams) 테이블과 선수 대기 명단(PlayerWaitingLists) 테이블이 1:N 관계를 맺음.
-  TeamInternals         TeamInternals[]  // 팀(Teams) 테이블과 팀 편성(TeamInternals) 테이블이 1:N 관계를 맺음.
+  user     Users        @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
+  TeamInternal          TeamInternals[]  // 팀(Teams) 테이블과 팀 편성(TeamInternals) 테이블이 1:N 관계를 맺음.
+  playerWaitingList     PlayerWaitingLists[]
+
 
   @@map("Teams")
 }
@@ -57,35 +58,44 @@ model TeamInternals {
   updatedAt             DateTime    @updatedAt @map("updatedAt")
 
   team     Teams        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+  player   Players      @relation(fields: [playerId], references: [playerId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
 
+  @@unique([teamId, playerId])
   @@map("TeamInternals")
 }
 
 model PlayerWaitingLists {
   playerWaitingListsId       Int         @id @default(autoincrement()) @map("playerWaitingListsId")
-  userId                     Int         @unique @map("userId")
-  teamId                     Int         @map("teamId")
+  userId                     Int         @map("userId")
+  teamId                     Int?         @map("teamId")
   playerId                   Int         @map("playerId")
+  name                       String?     @map("name")
   count                      Int         @map("count")
 
   createdAt                  DateTime    @default(now()) @map("createdAt")
   updatedAt                  DateTime    @updatedAt @map("updatedAt")
 
+  
   user     Users        @relation(fields: [userId], references: [userId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
-  team     Teams        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+  team     Teams?        @relation(fields: [teamId], references: [teamId], onDelete: Cascade)  // Teams 테이블과 관계를 설정.
+  player   Players      @relation(fields: [playerId], references: [playerId], onDelete: Cascade)  // Users 테이블과 관계를 설정.
 
+  @@unique([userId, playerId]) // userId와 playerId가 함께 유니크하도록 설정
   @@map("PlayerWaitingLists")
 }
 
 model Players {
   playerId              Int         @id @default(autoincrement()) @map("playerId")
-  name                  String      @map("name")
+  name                  String      @unique @map("name")
   speed                 Int         @map("speed")
   goalDecisiveness      Int         @map("goalDecisiveness")
   shootPower            Int         @map("shootPower")
   defense               Int         @map("defense")
   stamina               Int         @map("stamina")
   tier                  String      @map("tier")
+
+  playerWaitingList     PlayerWaitingLists[]   // 
+  TeamInternal          TeamInternals[]   // 
 
   createdAt             DateTime    @default(now()) @map("createdAt")
   updatedAt             DateTime    @updatedAt @map("updatedAt")

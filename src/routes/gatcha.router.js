@@ -21,7 +21,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
     });
 
     //해당 유저의 재화가 가챠 비용보다 적으면 오류문출력
-    if (user.cash < cost)
+    if (user.money < cost)
       return res.status(400).json({
         message: "보유한 금액이 모자랍니다!",
       });
@@ -62,14 +62,14 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
     });
 
     //불러온 목록에서 랜덤으로 한 선수를 최종적으로 뽑음
-    const pick_player =
+    const pickPlayer =
       tierplayers[Math.floor(Math.random() * tierplayers.length)];
 
     //해당 선수를 이미 보유하고있는지 찾음
     const IsExistplayer = await prisma.playerWaitingLists.findFirst({
       where: {
         userId: userId.userId,
-        playerId: pick_player.playerId,
+        playerId: pickPlayer.playerId,
       },
     });
 
@@ -83,7 +83,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
             userId: userId.userId,
           },
           data: {
-            cash: { decrement: cost },
+            money: { decrement: cost },
           },
         });
 
@@ -92,7 +92,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
           where: {
             playerWaitingListsId: IsExistplayer.playerWaitingListsId,
             userId: userId.userId,
-            playerId: pick_player.playerId,
+            playerId: pickPlayer.playerId,
           },
           data: {
             count: { increment: 1 },
@@ -102,7 +102,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
 
       return res.status(201).json({
         message: `${tier}등급을 뽑았습니다! 이미 보유하고있는 선수이므로 보유숫자가 늘어납니다.`,
-        data: pick_player,
+        data: pickPlayer,
       });
     }
 
@@ -114,7 +114,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
           userId: userId.userId,
         },
         data: {
-          cash: { decrement: cost },
+          money: { decrement: cost },
         },
       });
 
@@ -122,7 +122,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
       await tx.playerWaitingLists.create({
         data: {
           userId: userId.userId,
-          playerId: pick_player.playerId,
+          playerId: pickPlayer.playerId,
           count: 1,
         },
       });
@@ -130,7 +130,7 @@ router.post("/gatcha", authMiddleware, async (req, res, next) => {
 
     return res.status(201).json({
       message: `${tier}등급을 뽑았습니다!`,
-      data: pick_player,
+      data: pickPlayer,
     });
   } catch (err) {
     next(err);
@@ -149,8 +149,12 @@ router.get('/list', authMiddleware, async (req, res, next) => {
             },
           select: {
             playerId: true,
-            playerName: true,
-            count: true
+            player: {
+              select: {
+                name: true
+              },
+            },
+            count: true,
           }
       })
     

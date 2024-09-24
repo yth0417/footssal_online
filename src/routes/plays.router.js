@@ -8,10 +8,11 @@ const router = express.Router();
 router.get("/match", authMiddleware, async (req, res, next) => {
   try {
     const { userId } = req.user;
+    const { teamId } = req.query; // 사용자가 선택한 팀 ID를 쿼리로 받음
 
     // 내 계정 찾기
     const myAccount = await prisma.users.findFirst({
-      where: { userId: userId },
+      where: { userId: userId.userId },
     });
 
     if (!myAccount) {
@@ -20,7 +21,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 내 팀 선수들 정보 가져오기
     const myTeam = await prisma.teamInternals.findMany({
-      where: { userId },
+      where: { teamId: Number(teamId) },
       select: { playerId: true },
     });
 
@@ -95,7 +96,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     // 상대 팀 선수들 정보 가져오기
     const enemyTeam = await prisma.teamInternals.findMany({
       where: {
-        userId: enemysId,
+        userId: enemysId.userId,
       },
       select: {
         playerId: true,
@@ -161,13 +162,13 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     // 내 게임 점수
     const myScore = await prisma.users.findFirst({
-      where: { userId },
+      where: { userId: userId.userId },
       select: { score: true },
     });
 
     // 상대방 게임 점수
     const enemyScore = await prisma.users.findFirst({
-      where: { userId: enemysId },
+      where: { userId: enemysId.userId },
       select: { score: true },
     });
 
@@ -197,13 +198,13 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     }
 
     // 점수 업데이트
-    await prisma.Users.update({
-      where: { userId },
+    await prisma.users.update({
+      where: { userId: userId.userId },
       data: { score: newMyScore },
     });
 
-    await prisma.Users.update({
-      where: { userId: enemysId },
+    await prisma.users.update({
+      where: { userId: enemysId.userId },
       data: { score: newEnemyScore },
     });
 
