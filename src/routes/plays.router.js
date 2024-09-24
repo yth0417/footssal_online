@@ -63,7 +63,7 @@ router.get("/match", authMiddleware, async (req, res, next) => {
     // 적 유저 정보 가져오기
     const scoreArr = await prisma.users.findMany({
       where: {
-        userId: userId
+        userId: matchAccountIdArr.userId,
       },
       select: {
         score: true,
@@ -73,14 +73,16 @@ router.get("/match", authMiddleware, async (req, res, next) => {
         score: "asc",
       },
     });
-
+    
     const enemyIdArr = [];
+
+    // console.log("enemyIdArr:", enemyIdArr);
 
     // 내 점수를 기준으로 위 아래 3명 가져오기
     for (let i = 0; i < scoreArr.length; i++) {
       if (scoreArr[i].userId === userId) {
-        // 내 점수를 기준으로 같거나 아래 3명 가져오기
-        for (let j = i; j >= 0 && j >= i - 3; j--) {
+        // 내 점수를 기준으로 아래 3명 가져오기
+        for (let j = i - 1; j >= 0 && j >= i - 3; j--) {
           enemyIdArr.push(scoreArr[j].userId);
         }
         // 내 점수를 기준으로 위 3명 가져오기
@@ -90,6 +92,8 @@ router.get("/match", authMiddleware, async (req, res, next) => {
       }
     }
 
+    // console.log("enemyIdArr:", enemyIdArr);
+
     if (enemyIdArr.length === 0) {
       return res
         .status(400)
@@ -98,12 +102,16 @@ router.get("/match", authMiddleware, async (req, res, next) => {
 
     const enemysId = enemyIdArr[Math.floor(Math.random() * enemyIdArr.length)];
 
+    // console.log("enemysId:", enemysId);
+
     // 상대방 계정 찾기
     const enemyId = await prisma.users.findFirst({
       where: {
-        userid: enemysId.userId,
+        userId: enemysId,
       },
     });
+
+    // console.log("enemysId:", enemyId);
 
     // 상대 팀 선수들 정보 가져오기
     const enemyTeam = await prisma.teamInternals.findMany({
