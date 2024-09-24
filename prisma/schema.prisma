@@ -76,7 +76,7 @@ model PlayerWaitingLists {
   defense                    Int         @map("defense")
   stamina                    Int         @map("stamina")
   count                      Int         @map("count")
-  force             Int      @default(1) @map("force") //강화수치
+  force                      Int      @default(1) @map("force") //강화수치
 
   createdAt                  DateTime    @default(now()) @map("createdAt")
   updatedAt                  DateTime    @updatedAt @map("updatedAt")
